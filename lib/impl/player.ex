@@ -66,6 +66,11 @@ defmodule Impl.Player do
     put_guesses(tally)
   end
 
+  defp give_feedback(tally=%{game_state: :invalid_guess}) do
+    IO.puts("Please input a single lowercase letter!")
+    put_guesses(tally)
+  end
+
   defp give_feedback(tally=%{game_state: :won}) do
     IO.puts("You won!")
     IO.puts("Turns left #{tally.turns_left}")
