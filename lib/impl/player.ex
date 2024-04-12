@@ -1,4 +1,4 @@
-defmodule Impl.Player do
+defmodule TextClient.Impl.Player do
 
   @typep game :: Hangman.game
   @typep tally :: Hangman.tally
@@ -9,87 +9,59 @@ defmodule Impl.Player do
     game = Hangman.new_game()
 
     interact({game, Hangman.tally(game)})
-    :ok
   end
 
-  #@type state :: :initializing | :won | :lost | :good_guess | :bad_guess | :already_used
-  #   @type tally :: %{
-#    turns_left: integer,
-#    game_state: state,
-#    letters: list(String.t),
-#    used: list(String.t),
-#  }
-
-
   @spec interact(state) :: :ok
-  #defp interact(state) do
-  #  # Take current state
-  #  # give feedback
-  #  # display current word
-  #  # get next guess
-  #  # make a move
-  #  # call ourselves again
-  #  :ok
-  #end
-  defp interact({_game, tally=%{game_state: state}})
-  when state in [:won, :lost] do
-    give_feedback(tally)
-    put_word(tally)
-    :ok
+  defp interact({_game, %{game_state: :won}}) do
+    IO.puts("Congratulations, you won!")
+  end
+
+  defp interact({_game, tally=%{game_state: :lost}}) do
+    IO.puts("Sorry... you lost, the word was #{Enum.join(tally.letters)}")
   end
 
   defp interact({game, tally}) do
     give_feedback(tally)
     put_word(tally)
+    {game, tally} = Hangman.make_move(game, get_next_guess())
+    interact({game, tally})
   end
 
   @spec give_feedback(tally) :: :ok
   defp give_feedback(tally=%{game_state: :initializing}) do
     IO.puts("Ready to play?")
-    IO.puts("Turns left: #{tally.turns_left}")
+    IO.puts("Try to guess a #{length(tally.letters)} lettered word")
   end
 
-  defp give_feedback(tally=%{game_state: :good_guess}) do
+  defp give_feedback(%{game_state: :good_guess}) do
     IO.puts("Good guess!")
-    IO.puts("Turns left: #{tally.turns_left}")
-    put_guesses(tally)
   end
 
-  defp give_feedback(tally=%{game_state: :bad_guess}) do
+  defp give_feedback(%{game_state: :bad_guess}) do
     IO.puts("Bad guess!")
-    IO.puts("Turns left: #{tally.turns_left}")
-    put_guesses(tally)
   end
 
-  defp give_feedback(tally=%{game_state: :already_used}) do
+  defp give_feedback(%{game_state: :already_used}) do
     IO.puts("Letter already used!")
-    put_guesses(tally)
   end
 
-  defp give_feedback(tally=%{game_state: :invalid_guess}) do
+  defp give_feedback(%{game_state: :invalid_guess}) do
     IO.puts("Please input a single lowercase letter!")
-    put_guesses(tally)
-  end
-
-  defp give_feedback(tally=%{game_state: :won}) do
-    IO.puts("You won!")
-    IO.puts("Turns left #{tally.turns_left}")
-  end
-
-  defp give_feedback(tally=%{game_state: :lost}) do
-    IO.puts("You lost :(")
-    IO.puts("Turns left: #{tally.turns_left}")
-    put_guesses(tally)
   end
 
 
   @spec put_word(tally) :: :ok
-  defp put_word(%{letters: l}) do
-    IO.puts(Enum.reduce(l, "", fn elem, acc -> acc <> elem <> " " end))
+  defp put_word(tally=%{letters: l}) do
+    IO.puts("Turns left: #{tally.turns_left}")
+    IO.puts("Letters used: #{Enum.reduce(tally.used, "", fn elem, acc -> acc <> elem <> " " end)}")
+    IO.puts("Word so far: #{Enum.join(l, " ")}")
   end
 
-  @spec put_guesses(tally) :: :ok
-  defp put_guesses(%{used: l}) do
-    IO.puts("Letters used: #{Enum.reduce(l, "", fn elem, acc -> acc <> elem <> " " end)}")
+  @spec get_next_guess() :: String.t
+  defp get_next_guess() do
+    IO.gets("Next guess: ")
+    |> String.trim("\n")
+    |> String.downcase()
   end
+
 end
