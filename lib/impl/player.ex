@@ -12,8 +12,9 @@ defmodule TextClient.Impl.Player do
   end
 
   @spec interact(state) :: :ok
-  defp interact({_game, %{game_state: :won}}) do
+  defp interact({_game, tally=%{game_state: :won}}) do
     IO.puts("Congratulations, you won!")
+    IO.puts("Word was: #{Enum.join(tally.letters)}")
   end
 
   defp interact({_game, tally=%{game_state: :lost}}) do
@@ -52,9 +53,24 @@ defmodule TextClient.Impl.Player do
 
   @spec put_word(tally) :: :ok
   defp put_word(tally=%{letters: l}) do
-    IO.puts("Turns left: #{tally.turns_left}")
+    IO.puts("Turns left: #{turns_left(tally.turns_left)}")
     IO.puts("Letters used: #{Enum.reduce(tally.used, "", fn elem, acc -> acc <> elem <> " " end)}")
     IO.puts("Word so far: #{Enum.join(l, " ")}")
+  end
+
+  defp turns_left(turns_left)
+  when turns_left > 4 do
+    IO.ANSI.format([:green, "#{turns_left}"])
+  end
+
+  defp turns_left(turns_left)
+  when turns_left > 2 and turns_left <= 4 do
+    IO.ANSI.format([:yellow, "#{turns_left}"])
+  end
+
+  defp turns_left(turns_left)
+  when turns_left <= 2 do
+    IO.ANSI.format([:red, "#{turns_left}"])
   end
 
   @spec get_next_guess() :: String.t
